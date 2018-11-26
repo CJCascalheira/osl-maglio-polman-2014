@@ -36,6 +36,7 @@ Setting up the workspace involves loading packages and importing the data.
 
 ```{r message=FALSE}
 library(tidyverse)
+library(car)
 ```
 
 A relative path is used because the working directory is set.
@@ -62,12 +63,13 @@ Notice that the sample sizes in each **cell** are unequal. That is, the number o
 
 Uneven sample sizes across cells creates an **unbalanced design**. This will affect the code we write to analyze these data.
 
-But let's not get ahead of ourselves. First, we must code these integers to transform `station` into a factor. Might as well transform `direction` into a factor in the same call. The purpose of these transformations is to meet a requriement of factorial ANOVA: categorical predictors that are factors with two or more levels.
+But let's not get ahead of ourselves. First, we must code these integers to transform `station` into a factor. Might as well transform `direction` and `orientation` into factors in the same call. The purpose of these transformations is to meet a requriement of factorial ANOVA: categorical predictors that are factors with two or more levels.
 
 ```{r}
 maglio_clean <- within(maglio, {
   station <- factor(station, labels = c("spadina", "st_george", "bloor_yonge", "sherbourne"))
   direction <- factor(direction)
+  orientation <- factor(orientation, labels = c("towards", "away"))
 })
 ```
 
@@ -95,13 +97,46 @@ The presence of two independent variables classifies a factorial ANOVA as two-wa
 
 An analysis of variance is robust. It can provide valid results with minor violations of normality. Since the first three assumptions are met during experimental design, we must test for outliers, normality, and homogeneity of variances.
 
-The null and alternative hypotheses, assessed with the *F* test, are:
+The null and alternative hypotheses, assessed with the *F* test, can make claims about the means between cells or claims about the interaction between factors. For this study, they are:
 
-$$H_0: \text{the mean of the dependent variable for each group is equivalent} \\ H_1: \text{at least one group is different}$$
+$$H_0: \text{there is no interaction between orientation and station} \\ H_1: \text{there is an interaction}$$
 
 Maglio and Polman (2014) conducted a 2 x 4 between-groups factorial experiment. The first factor, `direction`, has two levels: eastbound and westbound. The second factor, `station`, has four levels: Spadina, St. George, Bloor-Yonge, and Sherbourne. Thus, the sample of participants is divided into eight groups.
 
 ### Two-way ANOVA {.tabset .tabset-pills}
+Since we have an unbalanced design with unequal sample sizes in each cell, we must specify the type of *sum of squares*. Type-III is usually [recommended](http://www.sthda.com/english/wiki/two-way-anova-test-in-r). When the design in unbalanced, each type of *sum of squares* will yield different results.
+
+With that in mind, let's start by constructing the analysis of variance.
+
+```{r}
+maglio_aov <- aov(subjective_distance ~ orientation * station, data = maglio_clean)
+```
+
+Now we summarize the model to test for interaction effects. Note that we *must* include the `options()` call **first** since the sum of squares is Type III. Failure to do so will produce a correct effect with the interaction, but spurious effects for each factor by itself. In this case, failure to set `options()` will cause all effects to appear significant.
+
+```{r}
+options(contrasts = c("contr.sum", "contr.poly"))
+(maglio_anova <- Anova(maglio_aov, type = "III"))
+```
+
+There are two significant effects, one on station and the other on the interaction between orientation and station. Therefore, we should assess the effect size, or partial eta-squared. This is given by the equation:
+
+$$\eta_p^2 = \frac{SS_{predictor}}{SS_{predictor} + SS_{residuals}}$$
+
+We can use `broom::tidy` to sweep the model's output into a tidy data frame. This will prevent entry errors and promote exact calculations.
+
+```{r}
+(maglio_tidy <- tidy(maglio_anova))
+```
+
+Now, calculating the effect size is a simple plug-in procedure.
+
+```{r}
+(eta_station <- maglio_tidy$sumsq[3] / (maglio_tidy$sumsq[3] + maglio_tidy$sumsq[5]))
+(eta_interact <- maglio_tidy$sumsq[4] / (maglio_tidy$sumsq[4] + maglio_tidy$sumsq[5]))
+```
+
+The two-way ANOVA revealed no main effect on orientaion, *F* < 1, *p* = .573. The *F*-value did not exceed the critical value. However, there was a significant effect on station, *F*(3, 194) = 24.10, *p* < .001, $\eta_p^2 = .27$. The interaction between orientation and station was also significant, *F*(3, 194) = 16.28, *p* < .001, $\eta_p^2 = .20$.
 
 #### Outliers?
 
@@ -111,12 +146,13 @@ Maglio and Polman (2014) conducted a 2 x 4 between-groups factorial experiment. 
 
 ## Communicate
 ___
+The two-way ANOVA revealed no main effect on orientaion, *F* < 1, *p* = .573. The *F*-value did not exceed the critical value. However, there was a significant effect on station, *F*(3, 194) = 24.10, *p* < .001, $\eta_p^2 = .27$. The interaction between orientation and station was also significant, *F*(3, 194) = 16.28, *p* < .001, $\eta_p^2 = .20$.
 
 # Acknowledgements
 ___
 I am thankful for my advisor, Dr. Brandt A. Smith for introducing me to R, JASP, and OSL. The discipline of psychology is advocating for preregistered, open materials. His encouragement to utilize open data and open source software has positioned me in the middle of the reproducible movement.
 
-I would still be clicking checkboxes and dropdowns to analyze data if it were not for [DataCamp](https://www.datacamp.com), [Rose Maier](https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html), [Alboukadel Kassambara](http://www.sthda.com/english/wiki/r-software), [Jonathan Baron](https://www.sas.upenn.edu/~baron/from_cattell/rpsych/rpsych.html#htoc60), and the team behind [personality-project](http://personality-project.org/r/r.guide.html#withinone).
+I would still be clicking checkboxes and dropdowns to analyze data if it were not for [DataCamp](https://www.datacamp.com), [Rose Maier](https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html), [Alboukadel Kassambara](http://www.sthda.com/english/wiki/two-way-anova-test-in-r), [Jonathan Baron](https://www.sas.upenn.edu/~baron/from_cattell/rpsych/rpsych.html#htoc60), and the team behind [personality-project](http://personality-project.org/r/r.guide.html#withinone).
 
 ## Dependencies
 This analysis was performed using the RStudio IDE.
