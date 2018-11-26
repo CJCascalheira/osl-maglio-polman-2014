@@ -254,10 +254,61 @@ div.tocify {
 <div id="clean" class="section level2">
 <h2>Clean</h2>
 <hr />
+<p>Coding clarity is important since we did not design the study. Which integer of the <code>station</code> variable correponds to Spadina, St. George, Bloor-Yonge, and Sherbourne? It is reasonable to think that the assignment of integers reads from left to right based on the Green Line map (see activity description).</p>
+<p>Calculation of the means enables verification of this assumption. Count is included to understand the grouping of participants better. We can compare our average subjective distance to the numbers reported in <a href="https://journals.sagepub.com/doi/pdf/10.1177/0956797614530571">Figure 1</a>.</p>
+<pre class="r"><code>maglio %&gt;%
+  group_by(direction, station) %&gt;%
+  summarize(mean = mean(subjective_distance), count = n())</code></pre>
+<pre><code>## # A tibble: 8 x 4
+## # Groups:   direction [?]
+##   direction station  mean count
+##   &lt;chr&gt;       &lt;int&gt; &lt;dbl&gt; &lt;int&gt;
+## 1 EAST            1  3.65    26
+## 2 EAST            2  2.77    26
+## 3 EAST            3  1.61    23
+## 4 EAST            4  2.77    26
+## 5 WEST            1  2.64    25
+## 6 WEST            2  1.64    25
+## 7 WEST            3  2.19    26
+## 8 WEST            4  4       25</code></pre>
+<p>The assumption held true: 1 corresponds to Spadina, 2 to St. George, and so on. Let’s code these values to transform <code>station</code> into a factor. Might as well transform <code>direction</code> into a factor in the same call. The purpose of these transformations is to meet a requriement of ANOVA: categorical predictors that are factors with two or more levels.</p>
+<pre class="r"><code>maglio_clean &lt;- within(maglio, {
+  station &lt;- factor(station, labels = c(&quot;spadina&quot;, &quot;st_george&quot;, &quot;bloor_yonge&quot;, &quot;sherbourne&quot;))
+})</code></pre>
 </div>
 <div id="understand" class="section level2">
 <h2>Understand</h2>
 <hr />
+<p>A factorial ANOVA compares the means across two or more independent variables, thereby splitting the sample into four or more groups. Contrast this with a one-way ANOVA, which only has one independent variable that splits the sample into two or more groups. In terms of analyzing variance, if we have more than one independent variable, then conduct a factorial ANOVA. Notice that, in both cases, we only have <em>one</em> dependent variable.</p>
+<p>The presence of two independent variables classifies a factorial ANOVA as two-way. The assumptions of a two-way ANOVA echo those of the one-way ANOVA. Three are met before data collection, three are tested.</p>
+<p><strong>Assumptions Before Data Collection</strong></p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Two or more categorical independent variables</strong> as factors with two or more levels;</p></li>
+<li><p><strong>One continuous dependent variable</strong> at the interval or ratio level;</p></li>
+<li><p><strong>Independence of observations</strong>, or a between-groups design, in which participants are separated into distinct groups with no overlap;</p></li>
+</ol>
+<p><strong>Tested Assumptions</strong></p>
+<ol start="4" style="list-style-type: decimal">
+<li><p><strong>No significant outliers</strong>, assessed with boxplots;</p></li>
+<li><p><strong>Normality</strong>, assessed with the Shapiro-Wilk test, histograms, and density curves for each combination of the two factors;</p></li>
+<li><p><strong>Homoscedasticity</strong>, assessed with Levene’s test for each combination of the two factors.</p></li>
+</ol>
+<p>An analysis of variance is robust. It can provide valid results with minor violations of normality.</p>
+<p>The null and alternative hypotheses, assessed with the <em>F</em> test, are:</p>
+<p><span class="math display">\[H_0: \text{the mean of the dependent variable for each group is equivalent} \\ H_1: \text{at least one group is different}\]</span></p>
+<p>Maglio and Polman (2014) conducted a 2 x 4 between-groups factorial experiment. The first factor, <code>direction</code>, has two levels: eastbound and westbound. The second factor, <code>station</code>, has four levels: Spadina, St. George, Bloor-Yonge, and Sherbourne. Thus, the sample of participants is divided into eight groups.</p>
+<div id="two-way-anova" class="section level3 tabset tabset-pills">
+<h3>Two-way ANOVA</h3>
+<div id="outliers" class="section level4">
+<h4>Outliers?</h4>
+</div>
+<div id="normality" class="section level4">
+<h4>Normality?</h4>
+</div>
+<div id="homoscedasticity" class="section level4">
+<h4>Homoscedasticity?</h4>
+</div>
+</div>
 </div>
 <div id="communicate" class="section level2">
 <h2>Communicate</h2>
@@ -303,6 +354,7 @@ div.tocify {
 ##  digest        0.6.18  2018-10-10 [1] CRAN (R 3.5.1)
 ##  dplyr       * 0.7.8   2018-11-10 [1] CRAN (R 3.5.1)
 ##  evaluate      0.12    2018-10-09 [1] CRAN (R 3.5.1)
+##  fansi         0.4.0   2018-10-05 [1] CRAN (R 3.5.1)
 ##  forcats     * 0.3.0   2018-02-19 [1] CRAN (R 3.5.0)
 ##  fs            1.2.6   2018-08-23 [1] CRAN (R 3.5.1)
 ##  ggplot2     * 3.1.0   2018-10-25 [1] CRAN (R 3.5.1)
@@ -351,6 +403,7 @@ div.tocify {
 ##  tidyselect    0.2.5   2018-10-11 [1] CRAN (R 3.5.1)
 ##  tidyverse   * 1.2.1   2017-11-14 [1] CRAN (R 3.5.0)
 ##  usethis       1.4.0   2018-08-14 [1] CRAN (R 3.5.1)
+##  utf8          1.1.4   2018-05-24 [1] CRAN (R 3.5.0)
 ##  withr         2.1.2   2018-03-15 [1] CRAN (R 3.5.0)
 ##  xml2          1.2.0   2018-01-24 [1] CRAN (R 3.5.0)
 ##  yaml          2.2.0   2018-07-25 [1] CRAN (R 3.5.1)

@@ -46,9 +46,68 @@ maglio <- read_csv("../data/Maglio and Polman 2014 Experiment 1.csv")
 
 ## Clean
 ___
+Coding clarity is important since we did not design the study. Which integer of the `station` variable correponds to Spadina, St. George, Bloor-Yonge, and Sherbourne? It is reasonable to think that the assignment of integers reads from left to right based on the Green Line map (see activity description).
+
+Calculation of the means enables verification of this assumption. Count is included to understand the grouping of participants better. We can compare our average subjective distance to the numbers reported in [Figure 1](https://journals.sagepub.com/doi/pdf/10.1177/0956797614530571).
+
+```{r}
+maglio %>%
+  group_by(direction, station) %>%
+  summarize(mean = mean(subjective_distance), count = n())
+```
+
+The assumption held true: 1 corresponds to Spadina, 2 to St. George, and so on.
+
+Notice that the sample sizes in each **cell** are unequal. That is, the number of participants within each level combination of factors (i.e., Spadina East, Spadina West, etc.) varies. Four cells have 26 participants, three cells have 25 participants, and 1 cell has 23 participants. 
+
+Uneven sample sizes across cells creates an **unbalanced design**. This will affect the code we write to analyze these data.
+
+But let's not get ahead of ourselves. First, we must code these integers to transform `station` into a factor. Might as well transform `direction` into a factor in the same call. The purpose of these transformations is to meet a requriement of factorial ANOVA: categorical predictors that are factors with two or more levels.
+
+```{r}
+maglio_clean <- within(maglio, {
+  station <- factor(station, labels = c("spadina", "st_george", "bloor_yonge", "sherbourne"))
+  direction <- factor(direction)
+})
+```
 
 ## Understand
 ___
+A factorial ANOVA compares the means across two or more independent variables, thereby splitting the sample into four or more groups. Contrast this with a one-way ANOVA, which only has one independent variable that splits the sample into two or more groups. In terms of analyzing variance, if we have more than one independent variable, then conduct a factorial ANOVA. Notice that, in both cases, we only have *one* dependent variable.
+
+The presence of two independent variables classifies a factorial ANOVA as two-way. The assumptions of a two-way ANOVA echo those of the one-way ANOVA. Three are met before data collection, three are tested.
+
+**Assumptions Before Data Collection**
+
+1. **Two or more categorical independent variables** as factors with two or more levels;
+
+2. **One continuous dependent variable** at the interval or ratio level;
+
+3. **Independence of observations**, or a between-groups design, in which participants are separated into distinct groups with no overlap;
+
+**Tested Assumptions**
+
+4. **No significant outliers**, assessed with boxplots;
+
+5. **Normality**, assessed with the Shapiro-Wilk test, histograms, and density curves for each combination of the two factors;
+
+6. **Homoscedasticity**, assessed with Levene's test for each combination of the two factors.
+
+An analysis of variance is robust. It can provide valid results with minor violations of normality. Since the first three assumptions are met during experimental design, we must test for outliers, normality, and homogeneity of variances.
+
+The null and alternative hypotheses, assessed with the *F* test, are:
+
+$$H_0: \text{the mean of the dependent variable for each group is equivalent} \\ H_1: \text{at least one group is different}$$
+
+Maglio and Polman (2014) conducted a 2 x 4 between-groups factorial experiment. The first factor, `direction`, has two levels: eastbound and westbound. The second factor, `station`, has four levels: Spadina, St. George, Bloor-Yonge, and Sherbourne. Thus, the sample of participants is divided into eight groups.
+
+### Two-way ANOVA {.tabset .tabset-pills}
+
+#### Outliers?
+
+#### Normality?
+
+#### Homoscedasticity?
 
 ## Communicate
 ___
