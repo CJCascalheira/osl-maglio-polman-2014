@@ -1,0 +1,67 @@
+---
+title: "Open Stats Lab Factorial ANOVA in R Using Data from Maglio & Polman (2014)"
+author: "Cory J. Cascalheira"
+date: "November 26, 2018"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/GitHub/osl-maglio-polman-2014/src")
+```
+
+# Open Stats Lab
+___
+Kevin P. McIntyre developed this amazing resource for students of psychology. Check out [Open Stats Lab](https://sites.trinity.edu/osl/) for a collection of all activities.
+
+Each activity includes an article from *Psychological Science*, a data set, and an activity to complete in SPSS. However, if you are an open source fanatic, you could also complete the activity in [JASP](https://jasp-stats.org/). For tips on how to use JASP, check out [this resource](https://osf.io/t56kg/) created by Buchanan, Hopke, and Donaldson (2018).
+
+I prefer to get my hands deep into the data. Dr. McIntyre does not *yet* offer an R activity to accompany the work of [Maglio and Polman (2014)](https://journals.sagepub.com/doi/pdf/10.1177/0956797614530571), so here is one possible solution written in R.
+
+# Analysis
+___
+I will perform assumption checks for each test prior to running it. We already know that the data meet all assumptions, otherwise the authors would have used a different analytic approach. However, checking the assumptions is helpful because:
+
+1. reproducibility and accuracy can be verified; and
+2. if you are a student, then you should form the habit of testing assumptions.
+
+This analysis will follow the data science workflow advocated by [Garrett Grolemund and Hadley Wickham](https://r4ds.had.co.nz/introduction.html). First, we will set-up our session and import the data. Then, we must clean the data. Next, we will transform, model, and visualize the data to understand it. Finally, we will communicate our findings.
+
+## Import
+___
+Setting up the workspace involves loading packages and importing the data.
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+A relative path is used because the working directory is set.
+
+```{r message=FALSE}
+maglio <- read_csv("../data/Maglio and Polman 2014 Experiment 1.csv")
+```
+
+## Clean
+___
+
+## Understand
+___
+
+## Communicate
+___
+
+# Acknowledgements
+___
+I am thankful for my advisor, Dr. Brandt A. Smith for introducing me to R, JASP, and OSL. The discipline of psychology is advocating for preregistered, open materials. His encouragement to utilize open data and open source software has positioned me in the middle of the reproducible movement.
+
+I would still be clicking checkboxes and dropdowns to analyze data if it were not for [DataCamp](https://www.datacamp.com), [Rose Maier](https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html), [Alboukadel Kassambara](http://www.sthda.com/english/wiki/r-software), [Jonathan Baron](https://www.sas.upenn.edu/~baron/from_cattell/rpsych/rpsych.html#htoc60), and the team behind [personality-project](http://personality-project.org/r/r.guide.html#withinone).
+
+## Dependencies
+This analysis was performed using the RStudio IDE.
+
+```{r}
+devtools::session_info()
+```
