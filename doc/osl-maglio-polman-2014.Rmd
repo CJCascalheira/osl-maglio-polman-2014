@@ -208,7 +208,9 @@ plot(maglio_aov, 1)
 The plot shows no relationship. The red line is practically at zero. 
 
 ### Independent t-Tests
-The assumptions of the independent t-test are nearly identical to the two-way ANOVA, except for the requirement of the independent variable, which in this case, must be a single factor with two or more levels. We shall delineate the interaction between orientation and station by comparing the subjective-distance scores across eastbound and westbound participants for each of the stations.
+The assumptions of the independent t-test are nearly identical to the two-way ANOVA, except for the requirement of the independent variable, which in this case, must be a single factor with two or more levels. The results from the three assumptions that are tested (i.e., outliers, normality, and homoscedasticity) will likely be inherited from the ANOVA. However, we will test these assumptions below for each independent t-test.
+
+We shall delineate the interaction between orientation and station by comparing the subjective-distance scores across eastbound and westbound participants for each of the stations.
 
 Social scientists typically report Cohen's *d* as the effect size of independent t-tests. Cohen's *d* is standardized. In the present study, the author's chose to report partial eta-squared, which indicates the [proportion of overlap](http://psychology.okstate.edu/faculty/jgrice/psyc3214/independentsamples_t_test.pdf) between the factor and the reponse variable. Effect sizes are considered:
 
@@ -222,7 +224,7 @@ $$\eta_p^2 = \frac{t_{obs}^2}{t_{obs}^2 + df}$$
 
 We will tidy the t-test model like we did above. Once the model is in a data frame, `statistic` corresponds to the observed *t*-value, whereas parameter corresponds to the degrees of freedom.
 
-#### Spadina
+#### Spadina {.tabset .tabset-pills}
 ```{r}
 # Spadina t-test
 (spadina_t <- t.test(spadina_east$subjective_distance, spadina_west$subjective_distance,
@@ -235,7 +237,31 @@ We will tidy the t-test model like we did above. Once the model is in a data fra
 
 Westbound participants rated Spadina as being closer than eastbound participants, *p* < .001, $\eta_p^2 = .20$.
 
-#### St. George
+##### Outliers?
+```{r}
+maglio_clean %>% filter(station == "spadina") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+    geom_boxplot()
+```
+
+There are two outliers.
+
+##### Normality?
+```{r}
+with(spadina_east, shapiro.test(subjective_distance))
+with(spadina_west, shapiro.test(subjective_distance))
+```
+
+Both *p*s < .05, so we reject the null hypothesis: the data are not normal.
+
+##### Homoscedasticity?
+```{r}
+var.test(spadina_east$subjective_distance, spadina_west$subjective_distance)
+```
+
+The variances are homogenous, *p* = .647.
+
+#### St. George {.tabset .tabset-pills}
 ```{r}
 # St. George t-test
 (st_george_t <- t.test(st_george_east$subjective_distance, st_george_west$subjective_distance,
@@ -249,7 +275,31 @@ Westbound participants rated Spadina as being closer than eastbound participants
 
 Westbound participants rated St. George as being closer than eastbound participants, *p* < .001, $\eta_p^2 = .28$.
 
-#### Bloor-Yonge
+##### Outliers?
+```{r}
+maglio_clean %>% filter(station == "st_george") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+```
+
+There is one outlier among eastbound participants.
+
+##### Normality?
+```{r}
+with(st_george_east, shapiro.test(subjective_distance))
+with(st_george_west, shapiro.test(subjective_distance))
+```
+
+Since both *p*s < .05, we accept the alternative hypothesis: the data are not normally distributed.
+
+##### Homoscedasticity?
+```{r}
+var.test(st_george_east$subjective_distance, st_george_west$subjective_distance)
+```
+
+Since *p* = .241, we accept the null hypothesis: the data are homoscedastic.
+
+#### Bloor-Yonge {.tabset .tabset-pills}
 ```{r}
 # Bloor-Yonge t-test
 (bloor_yonge_t <- t.test(bloor_yonge_west$subjective_distance,
@@ -264,7 +314,31 @@ Westbound participants rated St. George as being closer than eastbound participa
 
 Eastbound participants rated Bloor-Yonge as being closer than westbound participants, *p* = .053, $\eta_p^2 = .08$.
 
-#### Sherbourne
+##### Outliers?
+```{r}
+maglio_clean %>% filter(station == "bloor_yonge") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+```
+
+No outliers present.
+
+##### Normality?
+```{r}
+with(bloor_yonge_west, shapiro.test(subjective_distance))
+with(bloor_yonge_east, shapiro.test(subjective_distance))
+```
+
+Both *p*s < .05, so we reject the null hypothesis. The normality assumption is violated.
+
+##### Homoscedasticity?
+```{r}
+var.test(bloor_yonge_west$subjective_distance, bloor_yonge_east$subjective_distance)
+```
+
+Since *p* < .05, we reject the null hypothesis: the variances are heterogenous.
+
+#### Sherbourne {.tabset .tabset-pills}
 ```{r}
 # Sherbourne t-test
 (sherbourne_t <- t.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance,
@@ -277,6 +351,30 @@ Eastbound participants rated Bloor-Yonge as being closer than westbound particip
 ```
 
 Eastbound participants rated Sherbourne as being closer than westbound participants, *p* < .001, $\eta_p^2 = .24$.
+
+##### Outliers?
+```{r}
+maglio_clean %>% filter(station == "sherbourne") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+```
+
+No outliers.
+
+##### Normality?
+```{r}
+with(sherbourne_west, shapiro.test(subjective_distance))
+with(sherbourne_east, shapiro.test(subjective_distance))
+```
+
+The data are not normally distributed (both *p*s < .05).
+
+##### Homoscedasticity?
+```{r}
+var.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance)
+```
+
+The variances are equal (*p* = .919).
 
 ## Communicate
 ___

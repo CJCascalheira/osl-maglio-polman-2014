@@ -85,6 +85,20 @@ plot(maglio_aov, 1)
 (spadina_tidy <- tidy(spadina_t))
 (eta_spadina <- spadina_tidy$statistic^2 / (spadina_tidy$statistic^2 + spadina_tidy$parameter))
 
+# Outliers?
+maglio_clean %>% filter(station == "spadina") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+
+# Normality?
+with(spadina_east, shapiro.test(subjective_distance))
+with(spadina_west, shapiro.test(subjective_distance))
+
+# Homoscedasticity?
+var.test(spadina_east$subjective_distance, spadina_west$subjective_distance)
+
+############################################################################
+
 ### St. George
 (st_george_t <- t.test(st_george_east$subjective_distance, st_george_west$subjective_distance,
                       paired = FALSE, var.equal = TRUE))
@@ -92,6 +106,20 @@ plot(maglio_aov, 1)
 # St. George effect size
 (st_george_tidy <- tidy(st_george_t))
 (eta_st_george <- st_george_tidy$statistic^2 / (st_george_tidy$statistic^2 + st_george_tidy$parameter))
+
+# Outliers?
+maglio_clean %>% filter(station == "st_george") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+
+# Normality?
+with(st_george_east, shapiro.test(subjective_distance))
+with(st_george_west, shapiro.test(subjective_distance))
+
+# Homoscedasticity?
+var.test(st_george_east$subjective_distance, st_george_west$subjective_distance)
+
+############################################################################
 
 ### Bloor-Yonge
 (bloor_yonge_t <- t.test(bloor_yonge_west$subjective_distance, bloor_yonge_east$subjective_distance,
@@ -101,6 +129,20 @@ plot(maglio_aov, 1)
 (bloor_yonge_tidy <- tidy(bloor_yonge_t))
 (eta_bloor_yonge <- bloor_yonge_tidy$statistic^2 / (bloor_yonge_tidy$statistic^2 + bloor_yonge_tidy$parameter))
 
+# Outliers?
+maglio_clean %>% filter(station == "bloor_yonge") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+
+# Normality?
+with(bloor_yonge_west, shapiro.test(subjective_distance))
+with(bloor_yonge_east, shapiro.test(subjective_distance))
+
+# Homoscedasticity?
+var.test(bloor_yonge_west$subjective_distance, bloor_yonge_east$subjective_distance)
+
+############################################################################
+
 ### Sherbourne
 (sherbourne_t <- t.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance,
                         paired = FALSE, var.equal = TRUE))
@@ -108,3 +150,17 @@ plot(maglio_aov, 1)
 # Sherbourne effect size
 (sherbourne_tidy <- tidy(sherbourne_t))
 (eta_sherbourne <- sherbourne_tidy$statistic^2 / (sherbourne_tidy$statistic^2 + sherbourne_tidy$parameter))
+
+# Outliers?
+maglio_clean %>% filter(station == "sherbourne") %>%
+  ggplot(aes(x = direction, y = subjective_distance)) +
+  geom_boxplot()
+
+# Normality?
+with(sherbourne_west, shapiro.test(subjective_distance))
+with(sherbourne_east, shapiro.test(subjective_distance))
+
+# Homoscedasticity?
+var.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance)
+
+############################################################################
