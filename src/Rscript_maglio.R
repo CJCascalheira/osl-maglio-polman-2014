@@ -209,7 +209,7 @@ descriptives$direction <- factor(descriptives$direction,
                                  labels = c("Eastbound", "Westbound"))
 
 # Visualize the relationship
-ggplot(descriptives, aes(x = station, y = mean, group = direction)) +
+figure_1 <- ggplot(descriptives, aes(x = station, y = mean, group = direction)) +
   geom_line(aes(linetype = direction), size = 1) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
   geom_point(size = 5, position = position_dodge(width = 0.01)) +
@@ -220,3 +220,6 @@ ggplot(descriptives, aes(x = station, y = mean, group = direction)) +
   labs(x = "", y = "Subjective Distance") +
   apa_theme +
   theme(legend.position = c(0.1, 0.99))
+
+####### SAVE PLOTS #######
+ggsave(filename = "figure_1.png", plot = figure_1, device = "png", path = "~/GitHub/osl-maglio-polman-2014/data/results/")
