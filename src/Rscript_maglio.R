@@ -4,6 +4,7 @@
 library(tidyverse)
 library(car)
 library(broom)
+library(psych)
 
 # Set working directory
 setwd("~/GitHub/osl-maglio-polman-2014/src")
@@ -164,3 +165,58 @@ with(sherbourne_east, shapiro.test(subjective_distance))
 var.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance)
 
 ############################################################################
+
+####### VISUALIZE #######
+
+# Construct the APA theme
+apa_theme <- theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(),
+        plot.title = element_text(hjust = 0.5),
+        text = element_text(size = 12))
+
+# Collect means and standard errors
+sp_e <- describe(spadina_east$subjective_distance)[,-c(1:2,4:12)]
+sp_w <- describe(spadina_west$subjective_distance)[,-c(1:2,4:12)]
+st_e <- describe(st_george_east$subjective_distance)[,-c(1:2,4:12)]
+st_w <- describe(st_george_west$subjective_distance)[,-c(1:2,4:12)]
+bl_e <- describe(bloor_yonge_east$subjective_distance)[,-c(1:2,4:12)]
+bl_w <- describe(bloor_yonge_west$subjective_distance)[,-c(1:2,4:12)]
+sh_e <- describe(sherbourne_east$subjective_distance)[,-c(1:2,4:12)]
+sh_w <- describe(sherbourne_west$subjective_distance)[,-c(1:2,4:12)]
+
+# Combine the variables holding descriptive data
+descriptives <- rbind(sp_e, sp_w, st_e, st_w, bl_e, bl_w, sh_e, sh_w)
+
+# Add new columns
+descriptives <- descriptives %>%
+  mutate(
+    direction = c("east", "west", "east", "west", "east", "west", "east", "west"),
+    station = c("spadina", "spadina", "st_george", "st_george", 
+                "bloor_yonge", "bloor_yonge", "sherbourne", "sherbourne")
+  )
+
+# Set station as a factor
+descriptives$station <- factor(descriptives$station, 
+                               levels = c("spadina", "st_george", "bloor_yonge", "sherbourne"),
+                               labels = c("Spadina", "St. George", "Bloor-Yonge", "Sherbourne"))
+
+# Set direction as a factor
+descriptives$direction <- factor(descriptives$direction,
+                                 levels = c("east", "west"),
+                                 labels = c("Eastbound", "Westbound"))
+
+# Visualize the relationship
+ggplot(descriptives, aes(x = station, y = mean, group = direction)) +
+  geom_line(aes(linetype = direction), size = 1) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_point(size = 5, position = position_dodge(width = 0.01)) +
+  geom_point(size = 4, position = position_dodge(width = 0.01), color = "white") +
+  expand_limits(y = c(0, 5)) +
+  scale_y_continuous(breaks = seq(0, 5, 0.5), expand = c(0, 0)) +
+  guides(linetype = guide_legend("")) +
+  labs(x = "", y = "Subjective Distance") +
+  apa_theme +
+  theme(legend.position = c(0.1, 0.99))
