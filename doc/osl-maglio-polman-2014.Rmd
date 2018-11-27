@@ -37,6 +37,7 @@ Setting up the workspace involves loading packages and importing the data.
 ```{r message=FALSE}
 library(tidyverse)
 library(car)
+library(broom)
 ```
 
 A relative path is used because the working directory is set.
@@ -71,6 +72,19 @@ maglio_clean <- within(maglio, {
   direction <- factor(direction)
   orientation <- factor(orientation, labels = c("towards", "away"))
 })
+```
+
+We know from the instructions that our task includes conducting independent t-tests. Let's split the data frame according the station and direction ahead of time.
+
+```{r}
+stations <- c("spadina", "st_george", "bloor_yonge", "sherbourne")
+
+for (i in stations) {
+  assign(paste(i, "east", sep = "_"), 
+         maglio_clean %>% filter(station == i & direction == "EAST"))
+  assign(paste(i, "west", sep = "_"), 
+         maglio_clean %>% filter(station == i & direction == "WEST"))
+}
 ```
 
 ## Understand
@@ -139,10 +153,130 @@ Now, calculating the effect size is a simple plug-in procedure.
 The two-way ANOVA revealed no main effect on orientaion, *F* < 1, *p* = .573. The *F*-value did not exceed the critical value. However, there was a significant effect on station, *F*(3, 194) = 24.10, *p* < .001, $\eta_p^2 = .27$. The interaction between orientation and station was also significant, *F*(3, 194) = 16.28, *p* < .001, $\eta_p^2 = .20$.
 
 #### Outliers?
+Outliers can reduce the accuracy of results and skew data.
+
+```{r}
+ggplot(maglio_clean, aes(x = station, y = subjective_distance, color = orientation)) +
+  geom_boxplot()
+```
+
+There are three outliers present.
 
 #### Normality?
+The null hypothesis of the Shapiro-Wilk test is that the data are normally distributed. Remember that, for analysis of variance, we test the normality of residuals.
+
+```{r}
+aov_residuals <- residuals(maglio_aov)
+shapiro.test(aov_residuals)
+```
+
+Since *p* < .001, we reject the null hypothesis: the data are not normally distributed. The ANOVA is a robust procedure, so it can withstand violations of normality. Let's visualize the distribution.
+
+One method is the Q-Q plot, a visualization that compares the quantiles of a normal distribution against the quantiles of the model's residuals. Normally distributed residuals will follow a straight diagonal line.
+
+```{r}
+plot(maglio_aov, 2)
+```
+
+Here, we see that the residuals undulate along the line. The pattern seems consistent if not normal, despite the labeled outliers in the upper right-hand corner of the plot.
+
+What does a density curve for each cell (i.e., group) reveal?
+
+```{r}
+ggplot(maglio_clean, aes(x = subjective_distance)) +
+  geom_density() +
+  facet_grid(orientation ~ station)
+```
+
+The data are clearly not normal. They are not even skewed in similar directions!
 
 #### Homoscedasticity?
+The null hypothesis of Levene's test is that the variances are homogenous.
+
+```{r}
+leveneTest(subjective_distance ~ orientation * station, data = maglio_clean)
+```
+
+There is no evidence in favor of rejecting the null hypothesis, *F* < 1, *p* = .773. The data are homoscedastic.
+
+We can also visualize homogenity of variances as the relationship between residuals and fitted values.
+
+```{r}
+plot(maglio_aov, 1)
+```
+
+The plot shows no relationship. The red line is practically at zero. 
+
+### Independent t-Tests
+The assumptions of the independent t-test are nearly identical to the two-way ANOVA, except for the requirement of the independent variable, which in this case, must be a single factor with two or more levels. We shall delineate the interaction between orientation and station by comparing the subjective-distance scores across eastbound and westbound participants for each of the stations.
+
+Social scientists typically report Cohen's *d* as the effect size of independent t-tests. Cohen's *d* is standardized. In the present study, the author's chose to report partial eta-squared, which indicates the [proportion of overlap](http://psychology.okstate.edu/faculty/jgrice/psyc3214/independentsamples_t_test.pdf) between the factor and the reponse variable. Effect sizes are considered:
+
+* **small** = .01
+* **medium** = .06
+* **large** = .14
+
+Here's how we calculate partial eta-squared for independent t-tests:
+
+$$\eta_p^2 = \frac{t_{obs}^2}{t_{obs}^2 + df}$$
+
+We will tidy the t-test model like we did above. Once the model is in a data frame, `statistic` corresponds to the observed *t*-value, whereas parameter corresponds to the degrees of freedom.
+
+#### Spadina
+```{r}
+# Spadina t-test
+(spadina_t <- t.test(spadina_east$subjective_distance, spadina_west$subjective_distance,
+                     paired = FALSE, var.equal = TRUE))
+
+# Spadina effect size
+(spadina_tidy <- tidy(spadina_t))
+(eta_spadina <- spadina_tidy$statistic^2 / (spadina_tidy$statistic^2 + spadina_tidy$parameter))
+```
+
+Westbound participants rated Spadina as being closer than eastbound participants, *p* < .001, $\eta_p^2 = .20$.
+
+#### St. George
+```{r}
+# St. George t-test
+(st_george_t <- t.test(st_george_east$subjective_distance, st_george_west$subjective_distance,
+                      paired = FALSE, var.equal = TRUE))
+
+# St. George effect size
+(st_george_tidy <- tidy(st_george_t))
+(eta_st_george <- st_george_tidy$statistic^2 / 
+    (st_george_tidy$statistic^2 + st_george_tidy$parameter))
+```
+
+Westbound participants rated St. George as being closer than eastbound participants, *p* < .001, $\eta_p^2 = .28$.
+
+#### Bloor-Yonge
+```{r}
+# Bloor-Yonge t-test
+(bloor_yonge_t <- t.test(bloor_yonge_west$subjective_distance,
+                         bloor_yonge_east$subjective_distance,
+                         paired = FALSE, var.equal = TRUE))
+
+# Bloor-Yonge effect size
+(bloor_yonge_tidy <- tidy(bloor_yonge_t))
+(eta_bloor_yonge <- bloor_yonge_tidy$statistic^2 /
+    (bloor_yonge_tidy$statistic^2 + bloor_yonge_tidy$parameter))
+```
+
+Eastbound participants rated Bloor-Yonge as being closer than westbound participants, *p* = .053, $\eta_p^2 = .08$.
+
+#### Sherbourne
+```{r}
+# Sherbourne t-test
+(sherbourne_t <- t.test(sherbourne_west$subjective_distance, sherbourne_east$subjective_distance,
+                        paired = FALSE, var.equal = TRUE))
+
+# Sherbourne effect size
+(sherbourne_tidy <- tidy(sherbourne_t))
+(eta_sherbourne <- sherbourne_tidy$statistic^2 / 
+    (sherbourne_tidy$statistic^2 + sherbourne_tidy$parameter))
+```
+
+Eastbound participants rated Sherbourne as being closer than westbound participants, *p* < .001, $\eta_p^2 = .24$.
 
 ## Communicate
 ___
