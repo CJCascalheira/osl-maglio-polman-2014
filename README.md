@@ -91,7 +91,7 @@ The presence of two independent variables classifies a factorial ANOVA as two-wa
 
 4. **No significant outliers**, assessed with boxplots;
 
-5. **Normality**, assessed with the Shapiro-Wilk test, histograms, and density curves for each combination of the two factors;
+5. **Normality**, assessed with the Shapiro-Wilk test, histograms, Q-Q plots, and density curves for each level combination of the two factors;
 
 6. **Homoscedasticity**, assessed with Levene's test for each combination of the two factors.
 
